@@ -18,7 +18,7 @@ contract Voting is Ownable {
     }
 
     enum WorkflowStatus {RegisteringVoters, ProposalsRegistrationStarted, ProposalsRegistrationEnded,
-        VotingSessionStarted, VotingSessionEnded, VotesTallied}
+        VotingSessionStarted, VotingSessionEnded, VotesTallied} // etapes du vote
 
     WorkflowStatus public status;
    
@@ -35,6 +35,7 @@ contract Voting is Ownable {
 
 
     /// DEFINITION DES FONCTIONS
+    // l'owner du contrat gere les etapes du vote
     function set_status(WorkflowStatus _status) external onlyOwner{
         require(uint(_status) == uint(status) + 1, "suivez les etapes"); // on avance pas à pas dans les différents états du vote
         WorkflowStatus previousStatus = status;
@@ -43,6 +44,7 @@ contract Voting is Ownable {
         emit WorkflowStatusChange(previousStatus, newStatus);
     }
 
+    // on modifie l attribut isRegistered pour les voters qui sont whitelistes
     function create_whitelist(address[] memory whitelisted_addresses) external onlyOwner{
         require(WorkflowStatus.RegisteringVoters == status, "ce n est pas la session d enrengistrement des votants");
         for (uint i = 0; i < whitelisted_addresses.length; i++) {
@@ -51,6 +53,7 @@ contract Voting is Ownable {
         }
     }
 
+    // on rajoute a l array proposals les nouvelles propositions
     function add_to_proposals(string memory _description) external {
         require(voters[msg.sender].isRegistered, "vous n etes pas whiteliste !!!");
         require(WorkflowStatus.ProposalsRegistrationStarted == status, "ce n est pas la session d enregistrement des propositions");
@@ -60,6 +63,7 @@ contract Voting is Ownable {
     }
 
 
+    // on vote pour un proposalId donne
     function vote(uint proposalId) external {
         require(voters[msg.sender].isRegistered, "vous n etes pas whiteliste");
         require(!voters[msg.sender].hasVoted, "vous avez deja vote");
@@ -72,6 +76,7 @@ contract Voting is Ownable {
         proposals[proposalId].voteCount += 1;
     }
 
+    // on recupere le proposalId du winner
     function getWinner() public view returns (uint winningProposal_) {
         require(WorkflowStatus.VotesTallied == status, "le depouillement des votes n a pas encore eu lieu");
         uint winningVoteCount = 0;
@@ -83,7 +88,8 @@ contract Voting is Ownable {
         }
     }
 
-    function winnerName() external view returns (string memory winnerName_) {
+    // on recupere la description du winner
+    function getwinnerName() external view returns (string memory winnerName_) {
         require(WorkflowStatus.VotesTallied == status, "le depouillement des votes n a pas encore eu lieu");
         winnerName_ = proposals[getWinner()].description;
     }
